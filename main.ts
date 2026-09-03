@@ -1,5 +1,8 @@
 const OPENAI_API_HOST = "api.groq.com";
 
+// Groq 不支持、需要在中转层剔除的请求参数
+const STRIP_FIELDS = ["enable_thinking", "thinking"];
+
 Deno.serve(async (request) => {
   // 处理 CORS 预检请求
   if (request.method === "OPTIONS") {
@@ -17,10 +20,26 @@ Deno.serve(async (request) => {
   const url = new URL(request.url);
   url.host = OPENAI_API_HOST;
 
+  let body = request.body;
+  const contentType = request.headers.get("content-type") || "";
+  // 对 JSON 请求体，剔除 Groq 不支持的字段（如 enable_thinking）
+  if (request.method === "POST" && contentType.includes("application/json")) {
+    try {
+      const raw = await request.text();
+      const json = JSON.parse(raw);
+      for (const field of STRIP_FIELDS) {
+        if (field in json) delete json[field];
+      }
+      body = JSON.stringify(json);
+    } catch {
+      body = request.body; // JSON 解析失败则原样转发
+    }
+  }
+
   const newRequest = new Request(url.toString(), {
     headers: request.headers,
     method: request.method,
-    body: request.body,
+    body,
     redirect: "follow",
   });
 
