@@ -1,0 +1,93 @@
+name: Monet Sunrise 3D — build, smoke test, screenshots and deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "monet-sunrise-3d/**"
+      - ".github/workflows/monet-sunrise-3d.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: monet-sunrise-pages
+  cancel-in-progress: true
+
+jobs:
+  build-test-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: monet-sunrise-3d/package.json
+
+      - name: Install app dependencies
+        working-directory: monet-sunrise-3d
+        run: npm install
+
+      - name: Type-check and production build
+        working-directory: monet-sunrise-3d
+        run: npm run build
+
+      - name: Install Playwright and Chromium
+        working-directory: monet-sunrise-3d
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+
+      - name: Start production preview
+        working-directory: monet-sunrise-3d
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/monet-preview.log 2>&1 &
+          for attempt in $(seq 1 40); do
+            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then
+              echo "Preview server is ready"
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/monet-preview.log
+          exit 1
+
+      - name: Smoke test interactions and capture screenshots
+        working-directory: monet-sunrise-3d
+        run: node scripts/smoke-test.mjs
+
+      - name: Upload QA screenshots and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: monet-sunrise-3d-qa-screenshots
+          path: monet-sunrise-3d/artifacts/
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Configure GitHub Pages
+        if: success()
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload production site
+        if: success()
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: monet-sunrise-3d/dist
+
+      - name: Deploy to GitHub Pages
+        if: success()
+        id: deployment
+        uses: actions/deploy-pages@v4
