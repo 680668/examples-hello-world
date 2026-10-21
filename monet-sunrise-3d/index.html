@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0a1720" />
+    <meta name="description" content="A cinematic, navigable 3D dreamscape inspired by Claude Monet's Impression, soleil levant." />
+    <title>IMPRESSION — Beyond the Horizon</title>
+  </head>
+  <body>
+    <div id="app">
+      <div class="loading" id="loading"><span class="loading-mark"></span><span>BUILDING THE ATMOSPHERE</span></div>
+      <canvas id="scene"></canvas>
+      <div class="grain"></div>
+      <header class="topbar">
+        <a class="wordmark" href="#" aria-label="Impression home">IMPRESSION<span> / 1872</span></a>
+        <div class="top-meta">A LIVING PAINTING <i></i> REALTIME 3D</div>
+      </header>
+      <main class="hero-copy">
+        <p class="eyebrow"><span>01</span> &nbsp; AN EXERCISE IN ATMOSPHERE</p>
+        <h1>BEYOND<br/><em>THE</em> HORIZON.</h1>
+        <p class="description">A painting was never a window.<br/>It was a world waiting to be entered.</p>
+        <button id="enter" class="enter-button"><span>ENTER THE CANVAS</span><b>↗</b></button>
+      </main>
+      <aside class="side-note"><span>48°51' N</span><span>FIRST LIGHT / LE HAVRE</span><span>MOVE TO EXPLORE</span></aside>
+      <div class="bottom-ui">
+        <div class="scene-index"><strong id="sceneNumber">01</strong><span>—</span><span id="sceneLabel">THE DISTANT SHORE</span></div>
+        <div class="camera-controls"><span>CAMERA</span><button data-camera="orbit" class="active">ORBIT</button><button data-camera="drift">DRIFT</button><button id="reset">RESET ↺</button></div>
+        <div class="sound-note"><span class="pulse"></span> AN ATMOSPHERE IN MOTION</div>
+      </div>
+      <div class="crosshair"><span></span><span></span></div>
+      <div class="scroll-hint">SCROLL TO DESCEND <b>↓</b></div>
+      <div class="progress"><span id="progressBar"></span></div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
