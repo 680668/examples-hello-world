@@ -30,7 +30,11 @@ const browser = await chromium.launch({
 });
 
 try {
-  const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
+  const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 });
+  // Throttle RAF during CI so SwiftShader can paint screenshots without a hot render loop.
+  await page.addInitScript(() => {
+    window.requestAnimationFrame = (callback) => window.setTimeout(() => callback(performance.now()), 180);
+  });
   page.on('pageerror', error => report.pageErrors.push(error.message));
   page.on('console', message => {
     if (message.type() !== 'error') return;
@@ -59,7 +63,7 @@ try {
   await page.waitForTimeout(2200);
   // Always save a first-frame screenshot, even when initialization fails.
   const desktopPath = new URL('../artifacts/monet-sunrise-desktop.png', import.meta.url);
-  await page.screenshot({ path: desktopPath.pathname, fullPage: true, animations: 'disabled' });
+  await page.screenshot({ path: desktopPath.pathname, fullPage: false, animations: 'allow', timeout: 15000 });
   report.screenshots.push('monet-sunrise-desktop.png');
 
   const initial = await page.evaluate(() => {
@@ -117,7 +121,7 @@ try {
   }
 
   const immersedPath = new URL('../artifacts/monet-sunrise-immersed.png', import.meta.url);
-  await page.screenshot({ path: immersedPath.pathname, fullPage: true, animations: 'disabled' });
+  await page.screenshot({ path: immersedPath.pathname, fullPage: false, animations: 'allow', timeout: 15000 });
   report.screenshots.push('monet-sunrise-immersed.png');
 
   await page.setViewportSize({ width: 390, height: 844 });
@@ -130,7 +134,7 @@ try {
   report.mobileState = mobile;
   check('Mobile layout matches viewport width', Math.abs(mobile.appWidth - 390) < 2, JSON.stringify(mobile));
   const mobilePath = new URL('../artifacts/monet-sunrise-mobile.png', import.meta.url);
-  await page.screenshot({ path: mobilePath.pathname, fullPage: true, animations: 'disabled' });
+  await page.screenshot({ path: mobilePath.pathname, fullPage: false, animations: 'allow', timeout: 15000 });
   report.screenshots.push('monet-sunrise-mobile.png');
 
   try {
